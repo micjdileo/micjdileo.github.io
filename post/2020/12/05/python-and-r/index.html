@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Michael DiLeo" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../../img/favicon.ico">
+    <title>Python and R</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../../../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../../../../post/">BLOG</a></li>
+        
+        <li><a href="../../../../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../../../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../../../../post/2020/12/05/python-and-r/">Python and R</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         December 5, 2020 
+            &nbsp;&nbsp;
+            
+            <span class="label label-success">R Markdown</span>
+            
+            <span class="label label-success">Python</span>
+            
+            <span class="label label-success">Reticulate</span>
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="python-and-r-working-together" class="section level1">
+<h1>Python and R, Working Together!</h1>
+<div id="collatz-solver" class="section level2">
+<h2>Collatz Solver</h2>
+<pre class="python"><code>#!/usr/bin/env python3
+
+# ------------------------------
+# projects/collatz/Collatz.py
+# Copyright (C) 2016
+# Glenn P. Downing
+# Project completed for CS 330E
+# ------------------------------
+
+
+# --------------
+# cache_constant
+# --------------
+
+# stores computed values for max cycle length per 1000 range
+# for example i = 3 has max cycle length for 3001 - 4000
+
+CACHE = [179, 182, 217, 238, 215, 236, 262, 252, 247, 260, 268, 250, 263, 276, 271, 271,
+         266, 279, 261, 274, 256, 269, 269, 282, 264, 264, 308, 259, 259, 272, 272, 285, 267, 267,
+         311, 324, 249, 306, 244, 306, 288, 257, 288, 270, 270, 314, 283, 314, 296, 296, 278, 309,
+         340, 322, 260, 260, 322, 304, 273, 304, 335, 317, 286, 330, 299, 268, 268, 312, 312, 299,
+         312, 325, 263, 294, 325, 307, 307, 351, 338, 307, 320, 320, 320, 289, 320, 302, 302, 333,
+         333, 315, 315, 333, 315, 284, 315, 328, 297, 297, 284, 328, 341, 310, 310, 248, 310, 341,
+         354, 292, 279, 310, 292, 323, 323, 292, 305, 349, 305, 305, 336, 305, 318, 336, 318, 331,
+         287, 318, 331, 287, 331, 344, 331, 300, 331, 313, 300, 344, 313, 331, 313, 313, 344, 326,
+         375, 282, 326, 295, 357, 295, 326, 326, 370, 295, 308, 308, 352, 308, 383, 339, 321, 352,
+         370, 290, 339, 321, 334, 321, 352, 321, 321, 334, 290, 334, 303, 347, 334, 272, 334, 334,
+         347, 303, 365, 316, 334, 254, 316, 329, 347, 329, 316, 360, 329, 329, 347, 329, 342, 360,
+         298, 285, 329, 329, 342, 311, 342, 311, 311, 355, 373, 311, 311, 311, 342, 355, 355, 373,
+         293, 280, 386, 324, 324, 355, 324, 355, 324, 324, 324, 368, 368, 306, 355, 306, 443, 350,
+         337, 368, 381, 306, 337, 350, 306, 350, 368, 275, 319, 337, 275, 319, 332, 350, 288, 350,
+         332, 319, 319, 332, 363, 288, 332, 345, 301, 345, 332, 332, 301, 407, 332, 332, 314, 345,
+         270, 345, 407, 283, 314, 358, 332, 345, 314, 389, 345, 314, 345, 358, 314, 358, 358, 376,
+         314, 327, 389, 345, 327, 327, 340, 358, 296, 358, 327, 327, 371, 327, 371, 296, 340, 340,
+         340, 265, 309, 309, 371, 340, 371, 309, 384, 340, 278, 340, 353, 309, 353, 322, 371, 353,
+         309, 322, 384, 340, 247, 322, 291, 353, 322, 291, 353, 335, 322, 322, 366, 366, 335, 366,
+         304, 335, 353, 335, 304, 441, 348, 322, 335, 366, 304, 379, 335, 304, 348, 379, 348, 304,
+         379, 348, 410, 348, 361, 317, 317, 361, 348, 286, 317, 361, 392, 348, 317, 348, 330, 361,
+         423, 361, 330, 361, 379, 374, 361, 330, 330, 348, 330, 299, 330, 436, 361, 330, 299, 361,
+         405, 312, 330, 330, 374, 299, 374, 387, 268, 343, 343, 405, 361, 268, 312, 312, 449, 330,
+         343, 374, 374, 312, 387, 343, 343, 281, 343, 325, 356, 418, 356, 356, 356, 374, 294, 281,
+         312, 343, 387, 343, 356, 281, 325, 387, 400, 356, 325, 294, 356, 338, 325, 338, 325, 325,
+         369, 369, 387, 307, 294, 369, 338, 338, 356, 338, 307, 307, 307, 444, 369, 325, 338, 369,
+         369, 413, 382, 338, 307, 276, 338, 307, 382, 320, 307, 382, 351, 351, 413, 382, 351, 307,
+         320, 338, 382, 382, 382, 351, 320, 320, 426, 395, 351, 320, 320, 289, 351, 395, 364, 320,
+         426, 320, 364, 364, 382, 364, 377, 364, 333, 470, 333, 351, 364, 395, 302, 333, 439, 364,
+         333, 364, 333, 302, 364, 408, 408, 377, 377, 333, 346, 346, 377, 377, 346, 302, 333, 377,
+         346, 346, 408, 364, 346, 359, 315, 346, 452, 377, 333, 315, 346, 377, 315, 346, 421, 390,
+         346, 315, 315, 284, 359, 328, 359, 328, 421, 328, 359, 359, 359, 359, 377, 359, 372, 359,
+         328, 346, 390, 390, 346, 359, 266, 328, 328, 434, 372, 359, 359, 328, 315, 297, 359, 403,
+         328, 328, 328, 328, 372, 372, 341, 372, 372, 403, 297, 297, 372, 341, 328, 341, 403, 359,
+         341, 354, 310, 310, 310, 447, 372, 372, 310, 341, 372, 372, 310, 354, 385, 354, 509, 341,
+         279, 279, 341, 310, 385, 354, 310, 416, 310, 354, 354, 354, 416, 372, 416, 279, 279, 310,
+         323, 341, 323, 385, 341, 336, 354, 385, 323, 385, 429, 354, 398, 354, 323, 323, 292, 292,
+         367, 442, 323, 367, 323, 336, 323, 323, 367, 336, 367, 385, 336, 336, 380, 367, 336, 336,
+         305, 380, 336, 354, 398, 380, 292, 336, 336, 442, 323, 367, 367, 336, 336, 318, 367, 367,
+         367, 411, 380, 349, 504, 380, 305, 349, 349, 336, 380, 380, 411, 380, 305, 305, 380, 349,
+         336, 349, 411, 367, 411, 349, 362, 305, 349, 318, 362, 318, 380, 336, 380, 349, 349, 424,
+         318, 380, 424, 424, 393, 318, 349, 318, 318, 349, 287, 362, 318, 393, 362, 331, 318, 424,
+         318, 362, 362, 331, 362, 362, 380, 362, 331, 375, 362, 331, 331, 468, 331, 393, 349, 344,
+         393, 362, 331, 437, 331, 393, 437, 362, 344, 362, 331, 331, 313, 375, 300, 362, 406, 406,
+         375, 344, 437, 375, 331, 331, 468, 344, 300, 375, 375, 406, 388, 300, 331, 375, 344, 406,
+         331, 344, 406, 287, 362, 375, 313, 357, 344, 344, 450, 357, 450, 375, 344, 375, 326, 344,
+         313, 419, 313, 375, 344, 419, 388, 357, 344, 313, 344, 525, 344, 388, 357, 313, 388, 331,
+         357, 401, 313, 419, 313, 357, 357, 357, 326, 357, 419, 388, 375, 357, 370, 313, 357, 326,
+         326, 344, 326, 388, 326, 344, 357, 388, 326, 432, 326, 326, 388, 432, 370, 401, 326, 357,
+         326, 326, 313, 370, 295, 370, 445, 401, 295, 370, 339, 326, 295, 326, 370, 326, 370, 339,
+         370, 295, 401, 401, 383, 295, 383, 295, 445, 326, 370, 326, 476, 383, 401, 357, 370, 339,
+         339, 383, 339, 432, 339, 339, 445, 308, 370, 339, 370, 476, 383, 339, 370, 308, 370, 370,
+         414, 414, 383, 352, 445, 507, 383, 339, 339, 352, 383, 352, 383, 383, 383, 352, 414, 383,
+         414, 414, 383, 339, 352, 352, 321, 352, 414, 352, 383, 414, 352, 321, 365, 308, 321, 352,
+         458, 352, 321, 383, 383, 339, 383, 334, 383, 334, 427, 321, 383, 383, 352, 427, 352, 396,
+         321, 352, 321, 321, 352, 290, 365, 365, 365, 440, 396, 396]
+         
+
+# ------------
+# collatz_eval
+# ------------
+
+def collatz_eval(i, j):
+    &quot;&quot;&quot;
+    i the beginning of the range, inclusive
+    j the end       of the range, inclusive
+    1 &lt; i &amp; j &lt; 999,999 inclusive
+    return the max cycle length of the range [i, j]
+    &quot;&quot;&quot;
+
+    # Take the range as min to max i, j
+    # If n is divisible by 1000, see if n + 1000 is in the range
+    # If it is, add n // 1000 from cache into the cycle length and then move on to n + 1000
+    assert min(i, j) &gt; 0
+    assert max(i, j) &lt; 1000000
+    cycle_list = []
+    n_list = []
+    n = min(i, j)
+
+    while n &lt;= max(i, j):
+        assert n &gt; 0
+
+        if n % 1000 == 0 and n + 1000 in range(min(i, j), max(i, j) + 1):
+            cycle_list.append(CACHE[n // 1000])
+            n += 1000
+            continue
+
+        c = 1
+        n_cycle = n
+        while n_cycle &gt; 1:
+            if (n_cycle % 2) == 0:
+                n_cycle = (n_cycle // 2)
+            else:
+                n_cycle = (3 * n_cycle) + 1
+            c += 1
+        assert c &gt; 0
+        cycle_list.append(c)
+        n_list.append(n)
+        n += 1
+
+    return cycle_list, n_list</code></pre>
+<p>The above code is a section of a larger project developed as a part of my CS330E class, Elements of Software Engineering. The code finds the collatz cycle length for all numbers between a range of numbers. Go here for an explanation of the <a href="https://en.wikipedia.org/wiki/Collatz_conjecture">collatz conjecture</a> in greater detail.</p>
+<pre class="python"><code>import pandas as pd
+from random import randint
+
+i, j = randint(1, 999999), randint(1, 999999)
+
+cycle_list, n_list = collatz_eval(i, j)
+df = pd.DataFrame(list(zip(cycle_list, n_list)), columns=[&#39;cycle_length&#39;, &#39;n&#39;])</code></pre>
+<p>The above section selects two random numbers and runs them through the collatz_eval function. This returns a list that is then converted a to pandas dataframe for use in R.</p>
+<pre class="r"><code>library(reticulate)
+library(tidyverse)
+
+df &lt;- as.data.frame(py$df)
+
+# Range of numbers
+df %&gt;% filter(n == min(n) | n == max(n)) %&gt;% select(n)</code></pre>
+<pre><code>##        n
+## 1 413152
+## 2 930597</code></pre>
+<pre class="r"><code>df %&gt;% arrange(-cycle_length) %&gt;% mutate(rank = row_number(), 
+    even = if_else(n%%2 == 0, T, F)) %&gt;% ggplot(aes(rank, 
+    cycle_length)) + geom_bar(stat = &quot;identity&quot;, aes(fill = even)) + 
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+    ggtitle(&quot;Collatz Cycle Length&quot;) + ylab(&quot;Cycle Length&quot;) + 
+    xlab(&quot;Numbers with Range, Ordered by Cycle Length&quot;)</code></pre>
+<p><img src="../../../../../post/2020-12-05-r-rmarkdown_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Maximum cycle length
+df %&gt;% filter(cycle_length == max(cycle_length)) %&gt;% 
+    select(n, cycle_length)</code></pre>
+<pre><code>##        n cycle_length
+## 1 930423          525</code></pre>
+<p>Generates a ggplot bar graph for all numbers in the range, sorted by their cycle length and colored by if the number was even or odd. The maximum cycle length across all the numbers in the range is also displayed.</p>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../../../../js/docs.min.js"></script>
+<script src="../../../../../js/main.js"></script>
+
+<script src="../../../../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

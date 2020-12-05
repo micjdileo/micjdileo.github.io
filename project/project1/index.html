@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Michael DiLeo" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1: Hockey Data Exploration</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1: Hockey Data Exploration</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="introduction" class="section level3">
+<h3>Introduction:</h3>
+<div id="these-two-data-sets-come-from-hockeyreference.com-and-rfordatasciences-tidy-tuesday.-i-found-this-data-by-exploring-the-rfordatasciences-2020-github-repo.-i-choose-this-data-as-i-enjoy-watching-hockey-and-i-thought-it-would-be-interesting-to-explore-how-different-top-players-stacked-up-against-each-other-as-well-as-exploring-general-scoring-trends-related-to-other-metrics-such-as-penalty-minutes-or-assists.-the-top_250-data-set-represents-the-top-250-goal-scorers-in-the-nhl-and-contains-their-total-amount-of-career-goals-years-they-played-in-and-other-information-such-as-a-link-to-thir-hockeyreference.com-page.-the-season_goals-data-set-represents-each-players-season-wide-stats-and-contains-much-more-information-including-their-assists-points-penalty-minutes-and-different-scoring-categories-during-each-season-they-played.-some-associations-i-expect-to-find-are-that-the-more-goals-a-player-scores-the-more-assists-they-also-score-defensemen-will-have-more-assists-than-goals-there-is-no-difference-between-average-goals-scored-by-c-lw-and-rw-players-and-that-there-will-be-no-difference-in-the-amount-of-penalty-minutes-between-the-four-positions." class="section level5">
+<h5>These two data sets come from hockeyreference.com and rfordatascience's Tidy Tuesday. I found this data by exploring the rfordatascience's 2020 github repo. I choose this data as I enjoy watching hockey and I thought it would be interesting to explore how different top players stacked up against each other as well as exploring general scoring trends related to other metrics (such as penalty minutes or assists). The top_250 data set represents the top 250 goal scorers in the NHL and contains their total amount of career goals, years they played in, and other information such as a link to thir hockeyreference.com page. The season_goals data set represents each players season wide stats and contains much more information including their assists, points, penalty minutes, and different scoring categories during each season they played. Some associations I expect to find are that the more goals a player scores the more assists they also score, defensemen will have more assists than goals, there is no difference between average goals scored by C, LW, and RW players, and that there will be no difference in the amount of penalty minutes between the four positions.</h5>
+</div>
+</div>
+<div id="importing-and-tidying-datasets" class="section level3">
+<h3>Importing and Tidying Datasets:</h3>
+<div id="to-begin-certain-columns-are-removed-from-each-data-set-namely-those-with-links-to-a-players-page-on-hockeyreference.com-or-redundant-data-occuring-in-both-sheets.-yr_start-is-then-mutated-to-be-a-character-vector-in-top_players-and-then-the-entire-top_players-sheet-is-put-through-a-for-loop-to-change-any-na-rankings-which-occur-is-a-player-is-tied-in-rank-by-goals-to-the-appropriate-number.-season_goals-is-filtered-so-that-it-contains-only-each-players-best-season-determined-by-goals-scored-and-duplicate-seasons-are-discounted-the-first-season-in-which-they-scored-their-max-goals-is-kept." class="section level5">
+<h5>To begin, certain columns are removed from each data set, namely those with links to a player's page on hockeyreference.com or redundant data occuring in both sheets. yr_start is then mutated to be a character vector in top_players, and then the entire top_players sheet is put through a for loop to change any NA rankings (which occur is a player is tied in rank by goals) to the appropriate number. season_goals is filtered so that it contains only each players best season determined by goals scored and duplicate seasons are discounted (the first season in which they scored their max goals is kept).</h5>
+<pre class="r"><code>library(tidyverse)
+
+top_250 &lt;- readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-03/top_250.csv&quot;)
+
+season_goals &lt;- readr::read_csv(&quot;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-03/season_goals.csv&quot;)
+
+top_players &lt;- top_250 %&gt;% select(-url_number, -raw_link, 
+    -link) %&gt;% mutate(yr_start = as.character(yr_start))
+for (i in 1:6) {
+    top_players &lt;- top_players %&gt;% mutate(raw_rank = case_when(is.na(raw_rank) ~ 
+        lag(raw_rank), !is.na(raw_rank) ~ raw_rank))
+}
+glimpse(top_players)</code></pre>
+<pre><code>## Rows: 251
+## Columns: 6
+## $ raw_rank    &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16…
+## $ player      &lt;chr&gt; &quot;Wayne Gretzky&quot;, &quot;Gordie Howe&quot;, &quot;Jaromir Jagr&quot;, &quot;Brett Hu…
+## $ years       &lt;chr&gt; &quot;1979-99&quot;, &quot;1946-80&quot;, &quot;1990-18&quot;, &quot;1986-06&quot;, &quot;1971-89&quot;, &quot;1…
+## $ total_goals &lt;dbl&gt; 894, 801, 766, 741, 731, 717, 708, 700, 694, 692, 690, 68…
+## $ active      &lt;chr&gt; &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retired&quot;, &quot;R…
+## $ yr_start    &lt;chr&gt; &quot;1979&quot;, &quot;1946&quot;, &quot;1990&quot;, &quot;1986&quot;, &quot;1971&quot;, &quot;1963&quot;, &quot;1979&quot;, &quot;…</code></pre>
+<pre class="r"><code>best_season &lt;- season_goals %&gt;% group_by(player) %&gt;% 
+    filter(goals == max(goals)) %&gt;% select(-rank, -years, 
+    -total_goals, -status, -yr_start, -league, -headshot) %&gt;% 
+    distinct(player, .keep_all = TRUE)
+glimpse(best_season)</code></pre>
+<pre><code>## Rows: 251
+## Columns: 16
+## Groups: player [251]
+## $ position           &lt;chr&gt; &quot;C&quot;, &quot;RW&quot;, &quot;RW&quot;, &quot;RW&quot;, &quot;C&quot;, &quot;C&quot;, &quot;RW&quot;, &quot;LW&quot;, &quot;LW&quot;,…
+## $ hand               &lt;chr&gt; &quot;Left&quot;, &quot;Right&quot;, &quot;Left&quot;, &quot;Right&quot;, &quot;Right&quot;, &quot;Left&quot;,…
+## $ player             &lt;chr&gt; &quot;Wayne Gretzky&quot;, &quot;Gordie Howe&quot;, &quot;Jaromir Jagr&quot;, &quot;B…
+## $ season             &lt;chr&gt; &quot;1981-82&quot;, &quot;1952-53&quot;, &quot;1995-96&quot;, &quot;1990-91&quot;, &quot;1978-…
+## $ age                &lt;dbl&gt; 21, 24, 23, 26, 27, 28, 25, 22, 21, 23, 23, 22, 26…
+## $ team               &lt;chr&gt; &quot;EDM&quot;, &quot;DET&quot;, &quot;PIT&quot;, &quot;STL&quot;, &quot;LAK&quot;, &quot;BOS&quot;, &quot;WSH&quot;, &quot;…
+## $ season_games       &lt;dbl&gt; 80, 70, 82, 78, 80, 78, 80, 82, 78, 80, 76, 84, 84…
+## $ goals              &lt;dbl&gt; 92, 49, 62, 86, 59, 76, 50, 65, 50, 65, 85, 76, 63…
+## $ assists            &lt;dbl&gt; 120, 46, 87, 45, 71, 76, 52, 47, 38, 90, 114, 56, …
+## $ points             &lt;dbl&gt; 212, 95, 149, 131, 130, 152, 102, 112, 88, 155, 19…
+## $ plus_minus         &lt;dbl&gt; 80, NA, 31, 23, 22, 69, 16, 28, 20, 17, 41, 8, 18,…
+## $ penalty_min        &lt;dbl&gt; 26, 57, 96, 22, 30, 71, 71, 40, 119, 61, 100, 45, …
+## $ goals_even         &lt;dbl&gt; 68, 37, 41, 57, 40, 51, 33, 43, 40, 45, 41, 52, 37…
+## $ goals_power_play   &lt;dbl&gt; 18, 11, 20, 29, 19, 24, 17, 22, 10, 17, 31, 24, 24…
+## $ goals_short_handed &lt;dbl&gt; 6, 1, 1, 0, 0, 1, 0, 0, 0, 3, 13, 0, 2, 7, 0, 1, 3…
+## $ goals_game_winner  &lt;dbl&gt; 12, 6, 12, 11, 7, 16, 11, 11, 3, 7, 8, 7, 8, 8, 4,…</code></pre>
+</div>
+</div>
+<div id="joining-data" class="section level3">
+<h3>Joining Data:</h3>
+<div id="the-two-data-sets-are-combined-to-get-all-of-the-season-wide-stats-for-each-top-player-for-their-best-goal-scoring-season.-the-data-sets-are-joined-by-player-using-a-full-join-to-ensure-each-player-has-their-appropriate-stats-assciated-with-them." class="section level5">
+<h5>The two data sets are combined to get all of the season wide stats for each top player for their best goal scoring season. The data sets are joined by player using a full join to ensure each player has their appropriate stats assciated with them.</h5>
+<pre class="r"><code>hockey &lt;- top_players %&gt;% full_join(best_season, by = &quot;player&quot;)
+glimpse(hockey)</code></pre>
+<pre><code>## Rows: 251
+## Columns: 21
+## $ raw_rank           &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,…
+## $ player             &lt;chr&gt; &quot;Wayne Gretzky&quot;, &quot;Gordie Howe&quot;, &quot;Jaromir Jagr&quot;, &quot;B…
+## $ years              &lt;chr&gt; &quot;1979-99&quot;, &quot;1946-80&quot;, &quot;1990-18&quot;, &quot;1986-06&quot;, &quot;1971-…
+## $ total_goals        &lt;dbl&gt; 894, 801, 766, 741, 731, 717, 708, 700, 694, 692, …
+## $ active             &lt;chr&gt; &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retired&quot;, &quot;Retir…
+## $ yr_start           &lt;chr&gt; &quot;1979&quot;, &quot;1946&quot;, &quot;1990&quot;, &quot;1986&quot;, &quot;1971&quot;, &quot;1963&quot;, &quot;1…
+## $ position           &lt;chr&gt; &quot;C&quot;, &quot;RW&quot;, &quot;RW&quot;, &quot;RW&quot;, &quot;C&quot;, &quot;C&quot;, &quot;RW&quot;, &quot;LW&quot;, &quot;LW&quot;,…
+## $ hand               &lt;chr&gt; &quot;Left&quot;, &quot;Right&quot;, &quot;Left&quot;, &quot;Right&quot;, &quot;Right&quot;, &quot;Left&quot;,…
+## $ season             &lt;chr&gt; &quot;1981-82&quot;, &quot;1952-53&quot;, &quot;1995-96&quot;, &quot;1990-91&quot;, &quot;1978-…
+## $ age                &lt;dbl&gt; 21, 24, 23, 26, 27, 28, 25, 22, 21, 23, 23, 22, 26…
+## $ team               &lt;chr&gt; &quot;EDM&quot;, &quot;DET&quot;, &quot;PIT&quot;, &quot;STL&quot;, &quot;LAK&quot;, &quot;BOS&quot;, &quot;WSH&quot;, &quot;…
+## $ season_games       &lt;dbl&gt; 80, 70, 82, 78, 80, 78, 80, 82, 78, 80, 76, 84, 84…
+## $ goals              &lt;dbl&gt; 92, 49, 62, 86, 59, 76, 50, 65, 50, 65, 85, 76, 63…
+## $ assists            &lt;dbl&gt; 120, 46, 87, 45, 71, 76, 52, 47, 38, 90, 114, 56, …
+## $ points             &lt;dbl&gt; 212, 95, 149, 131, 130, 152, 102, 112, 88, 155, 19…
+## $ plus_minus         &lt;dbl&gt; 80, NA, 31, 23, 22, 69, 16, 28, 20, 17, 41, 8, 18,…
+## $ penalty_min        &lt;dbl&gt; 26, 57, 96, 22, 30, 71, 71, 40, 119, 61, 100, 45, …
+## $ goals_even         &lt;dbl&gt; 68, 37, 41, 57, 40, 51, 33, 43, 40, 45, 41, 52, 37…
+## $ goals_power_play   &lt;dbl&gt; 18, 11, 20, 29, 19, 24, 17, 22, 10, 17, 31, 24, 24…
+## $ goals_short_handed &lt;dbl&gt; 6, 1, 1, 0, 0, 1, 0, 0, 0, 3, 13, 0, 2, 7, 0, 1, 3…
+## $ goals_game_winner  &lt;dbl&gt; 12, 6, 12, 11, 7, 16, 11, 11, 3, 7, 8, 7, 8, 8, 4,…</code></pre>
+</div>
+</div>
+<div id="summarizing-data" class="section level3">
+<h3>Summarizing Data:</h3>
+<div id="first-the-data-is-mutated-to-add-a-new-column-with-each-players-average-goals-per-game-in-the-given-season.-next-three-basic-tables-are-produced-showing-the-amount-of-players-in-the-top-250-from-each-team-only-the-top-6-teams-are-shown-and-then-in-each-postition-center-left-wing-right-wing-and-defense-with-either-a-left-or-right-shooting-hand.-finally-a-table-showing-the-mean-standard-deviation-min-median-and-max-for-goals-assists-points-goals-per-game-and-player-age-is-produced." class="section level5">
+<h5>First the data is mutated to add a new column with each players average goals per game in the given season. Next three basic tables are produced showing the amount of players in the top 250 from each team (only the top 6 teams are shown), and then in each postition (Center, Left Wing, Right Wing, and Defense) with either a left or right shooting hand. Finally a table showing the mean, standard deviation, min, median, and max for goals, assists, points, goals per game, and player age is produced.</h5>
+<pre class="r"><code># Mutate to add average goals per game in the
+# season
+hockey &lt;- hockey %&gt;% mutate(goals_per_game = goals/season_games)
+
+# How many top players per team and then position
+# and hand This finally gives me evidence that the
+# Boston Bruins are in fact the best team in the
+# league
+hockey %&gt;% filter(!is.na(team)) %&gt;% group_by(team) %&gt;% 
+    count %&gt;% arrange(-n) %&gt;% head(6)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+## # Groups:   team [6]
+##   team      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 BOS      15
+## 2 PHI      15
+## 3 TOR      14
+## 4 DET      13
+## 5 MTL      13
+## 6 PIT      13</code></pre>
+<pre class="r"><code>hockey %&gt;% filter(!is.na(position)) %&gt;% group_by(position, 
+    hand) %&gt;% count %&gt;% pivot_wider(names_from = hand, 
+    values_from = n)</code></pre>
+<pre><code>## # A tibble: 4 x 3
+## # Groups:   position [4]
+##   position  Left Right
+##   &lt;chr&gt;    &lt;int&gt; &lt;int&gt;
+## 1 C           41    24
+## 2 D            5     2
+## 3 LW          37     7
+## 4 RW          12    36</code></pre>
+<pre class="r"><code># Summary stats for top season performance
+hockey %&gt;% select(goals, assists, points, goals_per_game, 
+    age) %&gt;% rename(`goals-per-game` = &quot;goals_per_game&quot;) %&gt;% 
+    summarize_all(c(mean = mean, sd = sd, min = min, 
+        median = median, max = max)) %&gt;% pivot_longer(1:25) %&gt;% 
+    separate(name, into = c(&quot;variable&quot;, &quot;stat&quot;), sep = &quot;_&quot;) %&gt;% 
+    pivot_wider(names_from = stat, values_from = value)</code></pre>
+<pre><code>## # A tibble: 5 x 6
+##   variable         mean     sd    min median    max
+##   &lt;chr&gt;           &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1 goals          44.5   11.3   21     44      92   
+## 2 assists        46.3   16.1   13     44     120   
+## 3 points         90.9   23.4   34     89     212   
+## 4 goals-per-game  0.575  0.148  0.288  0.557   1.15
+## 5 age            25.7    3.41  19     25      38</code></pre>
+<pre class="r"><code># Coorelation matrix of all numeric categories
+hockey_cor &lt;- hockey %&gt;% select(is.numeric, -raw_rank) %&gt;% 
+    scale %&gt;% na.omit %&gt;% cor</code></pre>
+<p>The first table shows some interesting information, namely the fact that of the top six teams by number of top 250 players, five are from the &quot;original six&quot; of the NHL. These were the first six teams to play in the NHL, and as such it makes sense that they would have more players in the top 250, they have simply had more time to accumulate them. Pitsburg is the only team outside of the &quot;original six&quot; in this top six ranking, and the New York Rangers are the only &quot;original six&quot; team missing. The second table shows an interesting correlation between wing position and shooting hand. It appears that the majority of left wingers shoot left handed and visa versa for right wingers. We can also see that left handed shooting is most common in all positions besides right wingers, even defensemen. This association could be explained by the fact that many right handed players will actually shoot left handed. Finally, the second table shows interestingly enough that goals and assists seem to be approximately even per player, and that most players score only once every two games. It is also interesting to see that most players were about 25 when they had their best scoring season, but the oldest was 38 (Ralph Backstrom), a full three and a half standard deviation away from the mean.</p>
+</div>
+</div>
+<div id="average-goals-per-season-plot" class="section level3">
+<h3>Average Goals per Season Plot:</h3>
+<pre class="r"><code>hockey %&gt;% group_by(position) %&gt;% na.omit %&gt;% ggplot(aes(position, 
+    goals)) + geom_bar(stat = &quot;summary&quot;, fun = mean, 
+    aes(fill = position)) + geom_errorbar(stat = &quot;summary&quot;, 
+    fun.data = mean_cl_normal, width = 0.7) + ggtitle(&quot;Average Goals per Season per Position&quot;) + 
+    ylab(&quot;Mean Goals per Season&quot;) + xlab(&quot;Position&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /> This plot shows the average goals per season per position in the top 250 players. As to be expected defensemen score significantly less on average due to the nature of their position. Across the other three positions there appears to be no significant differences in average scoring per season. Right wingers have a slight edge, but this is most likely due to random error and is accounted for in the 95% confidence interval bars.</p>
+</div>
+<div id="penalty-minutes-plot" class="section level3">
+<h3>Penalty Minutes Plot:</h3>
+<pre class="r"><code>hockey %&gt;% arrange(-penalty_min) %&gt;% filter(!is.na(position)) %&gt;% 
+    mutate(penalty_min_rank = row_number()) %&gt;% ggplot(aes(penalty_min_rank, 
+    penalty_min)) + geom_bar(stat = &quot;identity&quot;, aes(fill = position)) + 
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+    ggtitle(&quot;Penalty Minutes per Player and Position&quot;) + 
+    ylab(&quot;Penalty Minutes&quot;) + xlab(&quot;Player&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hockey %&gt;% filter(!is.na(position)) %&gt;% filter(penalty_min == 
+    max(penalty_min) | penalty_min == min(penalty_min)) %&gt;% 
+    select(raw_rank, player, position, team, penalty_min)</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   raw_rank player       position team  penalty_min
+##      &lt;dbl&gt; &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;       &lt;dbl&gt;
+## 1      121 Butch Goring C        LAK             2
+## 2      203 Brian Sutter LW       STL           254</code></pre>
+<p>This plot shows each player and their amount of minutes in the penalty box across their entire best season. There does not appear to be a strong coorelation between position and more or less time in the box, but it is interesting to see that all of the top players by penalty minutes were left wingers. The player with the most penalty minutes was Brian Sutter of the St. Louis Blues and the player with the least was Butch Goring of the LA Kings.</p>
+</div>
+<div id="goals-vs-assists-plot" class="section level3">
+<h3>Goals vs Assists Plot:</h3>
+<pre class="r"><code>hockey %&gt;% select(goals, assists, position) %&gt;% na.omit %&gt;% 
+    ggplot(aes(goals, assists)) + geom_point(aes(color = position)) + 
+    geom_smooth(method = &quot;lm&quot;, se = F) + ggtitle(&quot;Goals vs. Assists per Player&quot;) + 
+    xlab(&quot;Goals&quot;) + ylab(&quot;Assists&quot;) + scale_y_continuous(breaks = seq(0, 
+    130, 10)) + scale_x_continuous(breaks = seq(0, 
+    100, 10)) + geom_abline()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cor(hockey$goals, hockey$assists)</code></pre>
+<pre><code>## [1] 0.439445</code></pre>
+<p>This plot shows each players goals scored in their best season plotted against their assists earned. Different positions are color coded and a blue line of best fit is added. We can see a realatively positive coorelation between the two values, and this makes sense based on the summary statistic previously computed showing close means and standard deviations in the two variables. We do see an interesting trend in that all defensemen score more assists than goals, and this can be seen by all of the green dots falling above the black y=x line.</p>
+</div>
+<div id="coorelation-matrix-plot" class="section level3">
+<h3>Coorelation Matrix Plot:</h3>
+<pre class="r"><code>hockey_cor %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    pivot_longer(-1) %&gt;% ggplot(aes(rowname, name, 
+    fill = value)) + geom_tile() + xlab(&quot;&quot;) + ylab(&quot;&quot;) + 
+    coord_fixed() + theme(axis.text.x = element_text(angle = 60, 
+    hjust = 1)) + scale_fill_gradient2(low = &quot;red&quot;, 
+    mid = &quot;white&quot;, high = &quot;blue&quot;) + ggtitle(&quot;Coorelation Matrix&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /> This plot shows a coorelation matrix of all numeric variables (minus ranking). We can see that most variables are positively associated with the others, with key exceptions being age and penalty minutes. It goes to reason that the more sucessful a player is the better they will score on most metrics, but that as a player ages they will be less athletic and score lower. In a similar vein it goes to reason that players that have higher penalty minutes will have less opportunities to score and contribute assists.</p>
+</div>
+<div id="principal-component-analysis" class="section level3">
+<h3>Principal Component Analysis:</h3>
+<pre class="r"><code>hockey_nums &lt;- hockey %&gt;% select_if(is.numeric) %&gt;% 
+    select(-raw_rank) %&gt;% scale
+rownames(hockey_nums) &lt;- hockey$player
+hockey_nums &lt;- hockey_nums %&gt;% na.omit
+hockey_pca &lt;- princomp(hockey_nums)
+
+summary(hockey_pca, loadings = T)</code></pre>
+<pre><code>## Importance of components:
+##                           Comp.1    Comp.2    Comp.3     Comp.4     Comp.5
+## Standard deviation     2.2321163 1.1722742 1.1195400 1.00991930 0.93052876
+## Proportion of Variance 0.4034664 0.1112838 0.1014969 0.08259373 0.07011861
+## Cumulative Proportion  0.4034664 0.5147502 0.6162472 0.69884089 0.76895951
+##                            Comp.6     Comp.7     Comp.8    Comp.9   Comp.10
+## Standard deviation     0.91200123 0.84968275 0.72830073 0.6468450 0.5903497
+## Proportion of Variance 0.06735418 0.05846384 0.04295317 0.0338824 0.0282223
+## Cumulative Proportion  0.83631369 0.89477753 0.93773070 0.9716131 0.9998354
+##                             Comp.11      Comp.12 Comp.13
+## Standard deviation     0.0450846477 3.674980e-08       0
+## Proportion of Variance 0.0001646005 1.093664e-16       0
+## Cumulative Proportion  1.0000000000 1.000000e+00       1
+## 
+## Loadings:
+##                    Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6 Comp.7 Comp.8
+## total_goals         0.341                                            0.330
+## age                -0.113 -0.458         0.276 -0.146 -0.520  0.468  0.416
+## season_games               0.215 -0.161  0.253        -0.146 -0.590  0.538
+## goals               0.416         0.181         0.117         0.113       
+## assists             0.285        -0.477  0.231 -0.415  0.188              
+## points              0.397        -0.241  0.132 -0.229  0.128              
+## plus_minus          0.204 -0.516 -0.234 -0.250 -0.244 -0.154 -0.229 -0.326
+##                    Comp.9 Comp.10 Comp.11 Comp.12 Comp.13
+## total_goals         0.709  0.508                         
+## age                                                      
+## season_games       -0.348  0.151   0.224                 
+## goals              -0.260         -0.357  -0.317  -0.676 
+## assists             0.138 -0.320          -0.537   0.103 
+## points                    -0.221  -0.118   0.780  -0.150 
+## plus_minus         -0.236  0.526                         
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 6 rows ]</code></pre>
+<pre class="r"><code>hockey_pca_scores &lt;- hockey_pca$scores %&gt;% as.data.frame %&gt;% 
+    rownames_to_column(&quot;Name&quot;)
+
+hockey_pca_scores %&gt;% top_n(1, Comp.1) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##            Name   Comp.1    Comp.2    Comp.3     Comp.4
+## 1 Wayne Gretzky 11.29018 -1.569494 -2.205982 -0.3059602</code></pre>
+<pre class="r"><code>hockey_pca_scores %&gt;% top_n(1, Comp.2) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##               Name   Comp.1   Comp.2    Comp.3    Comp.4
+## 1 Brendan Shanahan 1.826958 2.414637 -1.771742 -1.330939</code></pre>
+<pre class="r"><code>hockey_pca_scores %&gt;% top_n(1, Comp.3) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##         Name   Comp.1     Comp.2   Comp.3    Comp.4
+## 1 Brett Hull 6.669936 -0.2752121 3.268413 0.4855481</code></pre>
+<pre class="r"><code>hockey_pca_scores %&gt;% top_n(1, Comp.4) %&gt;% select(Name:Comp.4)</code></pre>
+<pre><code>##         Name   Comp.1   Comp.2    Comp.3   Comp.4
+## 1 Adam Oates 1.834758 0.013217 -1.501211 3.496702</code></pre>
+<pre class="r"><code>hockey &lt;- hockey %&gt;% left_join(hockey_pca_scores, by = c(player = &quot;Name&quot;))
+
+hockey %&gt;% ggplot(aes(Comp.1, Comp.2)) + geom_point() + 
+    geom_point(x = 11.29018, y = -1.569494, color = &quot;red&quot;) + 
+    geom_point(x = 1.826958, y = 2.414637, color = &quot;blue&quot;) + 
+    ggtitle(&quot;Component 1 vs Component 2&quot;) + xlab(&quot;Component 1&quot;) + 
+    ylab(&quot;Component 2&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hockey %&gt;% ggplot(aes(x = raw_rank, y = Comp.1)) + 
+    geom_point() + geom_point(x = 1, y = 11.29018, 
+    color = &quot;red&quot;) + geom_smooth(method = &quot;lm&quot;, se = F) + 
+    ggtitle(&quot;Player Rank vs Component 1&quot;) + xlab(&quot;Player Rank&quot;) + 
+    ylab(&quot;Component 1&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hockey %&gt;% ggplot(aes(x = penalty_min, y = Comp.2)) + 
+    geom_point() + geom_point(x = 211, y = 2.414637, 
+    color = &quot;blue&quot;) + geom_smooth(method = &quot;lm&quot;, se = F, 
+    color = &quot;red&quot;) + ggtitle(&quot;Penalty Minutes vs Component 2&quot;) + 
+    xlab(&quot;Penalty Minutes&quot;) + ylab(&quot;Component 2&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /> For this principal component analysis all numeric factors (excluding raw_rank as this is is basically another way to display total_goals) were included and run through princomp. All components were chosen that had eigenvalues above 1, below is a list of my interpretation of the four included values:</p>
+<p>Comp1: General player ability metric: Players that score high on this tend to be good at just about anything. As we would expect Wayne Gretzky (&quot;The Great One&quot;) is the highest on this component and is generaly considered to be one of if not the best player of all time.</p>
+<p>Comp2: Aggressiveness in play metric: These players have high penalty minutes and power play goals with low plus minus and age. They are get in your face types of players that play a physical game, and as such it makes sense that Brendan Shanahan is the top player in this component, he is the only player to have ever scored over 600 goals with over 2000 penalty minutes.</p>
+<p>Comp3: Puck hogging and scoring factor: These players focus on goals and game winners and have negative scores on assists and short handed goals. They want to score score score and thats about it, but you don't want to have them on the ice when you are down a man, you don't want a puck hog in when you're playing defense. The player that scores highest on this component is Brett Hull, a renowned scorer and &quot;sniper&quot; in the league.</p>
+<p>Comp4: Game smarts and good team player factor: These players have high assists, less penalty minutes, tend to be older, and score less per game. They are focused on getting the puck to their teammates and acting as a play maker, not necessarily scoring themseleves. The player highest on this factor was Adam Oates, the second most productive NHL player in history, generating over 1000 assists before his retirement.</p>
+<p>Finally we have some graphs showing the first two components and their relationships with different metrics. The first plot shows component one versus component two with Wayne Gretzy highlighted in red and Brendan Shanahan in blue. These two players are the uppper extremes of their respective componenets. Next we have a plot showing the association between raw rank and component one. This shows that as rank decreases so does component one, and again Gretzky is highlighted in red to show how extreme of an outlier he is on this measure. Lastly we have a plot of component two and penalty minutes, and again we see a general upward trend, with Brendan Shanahan being near the top of the graph.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

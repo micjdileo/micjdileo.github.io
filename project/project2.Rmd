@@ -1,0 +1,320 @@
+---
+title: "Project 2: Coffee Data Regressions"
+author: "Michael DiLeo, mjd3358"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+---
+
+```{r global_options, include=FALSE}
+#DO NOT EDIT THIS CHUNK OR ANYTHING ABOVE IT!
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F, tidy=T, tidy.opts=list(width.cutoff=50), R.options=list(max.print=100,dplyr.print_max=100))
+```
+
+```{R}
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+```
+
+
+### Importing and Tidying Datasets:
+##### These data were collected from the Coffee Quality Institute's review pages on January 2018 and accessed through TidyTuesday on Github
+```{R}
+# Libraries
+library(tidyverse)
+
+# Read in datasets
+coffee_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-07/coffee_ratings.csv')
+
+coffee <- coffee_ratings %>% select(total_cup_points, species, country_of_origin, processing_method, color, aroma, flavor, aftertaste, acidity, body, balance, uniformity, clean_cup, sweetness, cupper_points, category_one_defects, category_two_defects, altitude_mean_meters) %>% filter(!is.na(country_of_origin))
+
+glimpse(coffee)
+```
+This data measures various aspects of coffee tasting from a wide selection of different brews. Most of the variables are self explanatory, but we go over them in detail here. Species relates to the species of coffee bean used, of which there are two, Arabica and Robusta. Processing method is how the beans were prepared prior to being brewed, this measure will be condensed later in this project to washed vs. unwashed, with all beans not being prepared in the "Washed / Wet" method being placed into the unwashed group. Country of origin is where the beans were originally grown, and color is the color prior to roasting. The mean altitude measures the average altitude at which the variety of bean is grown, as this can vary slightly. Both category one and two defects measure errors in the preperation of the drink in this specific competition. Finally, all other variables measure aspects of the taste and desirability of the coffee, with the total cup points merely summing these different categories to create on final score. In total there are 18 variables being measured, with 1338 total observations.
+
+### MANOVA:
+##### MANOVA with coffee ratings measures and processing methods
+```{R}
+# Creating MANOVA
+man_cof <- coffee %>% filter(!is.na(processing_method))
+man1<-manova(cbind(aroma, flavor, aftertaste, acidity, body, balance, cupper_points)~processing_method, data=man_cof)
+
+# Assumptions for MANOVA
+library(rstatix)
+group <- man_cof$processing_method 
+DVs <- man_cof %>% select(aroma, flavor, aftertaste, acidity, body, balance, cupper_points)
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)
+# Found p < 0.05, assumption violated. No need to test homogeneity of covariance matrices
+
+# Summary of MANOVA
+summary(man1)
+
+# Summary of individual ANOVAs
+summary.aov(man1)
+
+# Post-hoc test for highpoint meters
+pairwise.t.test(man_cof$flavor, man_cof$processing_method, p.adj = "none")
+pairwise.t.test(man_cof$aftertaste, man_cof$processing_method, p.adj = "none")
+pairwise.t.test(man_cof$body, man_cof$processing_method, p.adj = "none")
+pairwise.t.test(man_cof$balance, man_cof$processing_method, p.adj = "none")
+pairwise.t.test(man_cof$cupper_points, man_cof$processing_method, p.adj = "none")
+
+# Probability of at least on type-1 error
+1 - 0.95^(58)
+
+# Bonferroni Correction
+0.05/58
+```
+A MANOVA was run to see if there was any difference in aroma, flavor, aftertaste, acidity, body, balance, and cupper point values between the different processing methods. Assumptions were tested, finding that the multivariate normality for each group was violated (all p-values < 0.05). Due to this, homogeneity of the covariance matrices were not tested, but MANOVA was still performed regardless of the assumption violations. In total 58 tests were performed. This would result in a 94.89% chance of at least one type-1 error, so the alpha value was adjusted accordingly to 0.00086.
+
+MANOVA found a significant difference in at least one of the response variables between at least two of the groups (p < 0.00086). Individual ANOVA tests found significant differences in flavor, aftertaste, body, balance, and cupper points (all p < 0.00086) across at least two of the groups. Finally, post-hoc t-tests were performed and found differenes in all of the above measures between the Natural/Dry group and the Washed/Wet group (all p < 0.00086), along with a difference in cupper points between the Natural/Dry and Other groups (p < 0.00086).
+
+
+### Randomization Test:
+##### Randomized ANOVA using country of origin and total points
+```{R}
+set.seed(8847)
+rnd_cof <- coffee %>% select(country_of_origin, total_cup_points) %>% na.omit()
+
+summary(aov(total_cup_points~country_of_origin,data=rnd_cof))
+obs_F <- 5.437
+
+Fs<-replicate(5000,{
+new<-rnd_cof%>%mutate(total_cup_points=sample(total_cup_points))
+
+# Compute the F-statistic by hand
+SSW <- new %>% group_by(country_of_origin) %>% summarise(SSW=sum((total_cup_points-mean(total_cup_points))^2)) %>%
+summarise(sum(SSW)) %>% pull()
+SSB <- new %>% mutate(mean=mean(total_cup_points)) %>% group_by(country_of_origin) %>% mutate(groupmean=mean(total_cup_points)) %>% 
+summarise(SSB=sum((mean-groupmean)^2)) %>% summarise(sum(SSB)) %>% pull()
+(SSB/35)/(SSW/1302)
+})
+
+as.data.frame(Fs) %>% ggplot(aes(x=Fs)) + geom_histogram(bins = 100) + geom_vline(xintercept = obs_F, color="red") + ggtitle("Distribution of Null Hypothesis F Statistic") + ylab("Count") + xlab("F statistic") + coord_cartesian(xlim = c(0, 7.5))
+
+mean(Fs>obs_F) 
+```
+A randomized ANOVA test was performed by calculating F-statistic values after scrambling the original data. ANOVA tested whether there was a difference in total cup points across the different countries of origin. The null hypothesis assumes that there is no difference while the alternative states that there is a difference across at least two of the groups. The final p-value found was less than 0.05, therefore we have significant evidence to reject the null hypothesis. There is a significant difference in total cup points between at least two countries. 
+
+
+### Linear Regression:
+##### Linear regression predicting flavor score with aroma score and processing method
+```{R}
+library(lmtest)
+library(sandwich)
+
+lin_cof <- coffee %>% select(flavor, aroma, processing_method) %>% na.omit()
+lin_cof$aroma_c <- lin_cof$aroma - mean(lin_cof$aroma, na.rm = T)
+
+mymodel <- lm(flavor~aroma_c*processing_method, data = lin_cof)
+summary(mymodel)
+lin_cof %>% ggplot(aes(x=aroma_c, y=flavor, group=processing_method)) +  geom_smooth(method="lm",formula=y~x,se=F,aes(color=processing_method))+ ggtitle("Flavor Vs. Aroma grouped by Processing Method") + ylab("Flavor") + xlab("Aroma (mean centered)") + labs(color = "Processing Method")
+
+# Normality of residuals
+resids<-mymodel$residuals
+shapiro.test(resids)
+# Heteroskadacity test
+bptest(mymodel)
+# Linearity 
+lin_cof %>% ggplot(aes(x=aroma_c, y=flavor)) + geom_point(aes(color=processing_method)) + ggtitle("Flavor Vs. Aroma grouped by Processing Method") + ylab("Flavor") + xlab("Aroma (mean centered)") + labs(color = "Processing Method")
+
+coeftest(mymodel, vcov = vcovHC(mymodel))
+```
+A linear regression predicting flavor score was run based off of aroma and processing method. It was found that for every one increase in aroma score away from the mean, flavor score increased by 0.75237 points controlling for processing method. It was also found that for each processing method, Other, Pulped Natural/Honey, Semi-washed/Semi-pulped, and Washed/Wet, compared to Natural/Dry there was a decrease in flavor score of 0.011, 0.017, 0.001, and 0.068 respectively when controlling for aroma. Finally, the effect (slope) of aroma is changed by each processing method compared to Natural/Dry. Other leads to 0.278 increase in effect, Pulped Natural/Honey to a 0.186 increase, Semi-washed/Semi-pulped to a 0.036 decrease, and Washed/Wet to a 0.052 increase.
+
+Assumptions for linear regression were not all met. While linearity was met, formal tests of both the normality of the residuals and heteroskadacity failed. Regardless, linear regression was run with both normal and robust standard errors. In both cases the only significant effects were that of the aroma and the Washed/Wet processing method. No interactions were significant. Our model accounts for approximately 54.74% of the variance in flavor ratings which is shown by the adjusted R-squared value.
+
+
+### Linear Regression with Bootstrapped SE:
+##### Linear Regression predicting flavor score, bootstrapped standard errors resampling rows
+```{R}
+set.seed(8847)
+lin_cof <- coffee %>% select(flavor, aroma, processing_method) %>% na.omit()
+lin_cof$aroma_c <- lin_cof$aroma - mean(lin_cof$aroma, na.rm = T)
+
+samp_distn<-replicate(5000, {
+  boot_dat <- sample_frac(lin_cof, replace=T) #take bootstrap sample of rows
+  fit <- lm(flavor~aroma_c*processing_method, data = boot_dat) #fit model on bootstrap sample
+  coef(fit) #save coefs
+})
+SEs <- NULL
+
+## Normal-theory SEs
+SEs <- rbind(SEs,coeftest(mymodel)[,2])
+
+## Heteroskedasticity Robust SEs
+SEs <- rbind(SEs, coeftest(mymodel, vcov=vcovHC(mymodel))[,2])
+
+## Bootstrapped SEs (resampling rows)
+SEs <- rbind(SEs, samp_distn%>%t%>%as.data.frame%>%summarize_all(sd))
+
+SEs %>% as.data.frame() %>% mutate(SE_type=c("Normal Theory", "Heteroskedasticity", "Bootstrapped Rows")) %>% pivot_longer(1:10, names_to="Variable") %>% pivot_wider(names_from = SE_type)
+```
+The linear regression was rerun using bootstrapping, resampling from rows. For all variables except mean centered aroma and the interaction between aroma and Washed/Wet the normal theory standard errors were the highest. In all other instances the Heteroskedasticity and Bootstrapped errors were lower, always falling fairly close to each other. Due to this the significance of the variables would not change as both the normal theory and the heteroskedasticity models had the same significances and the bootstrapped errors were near identical to the heteroskedasticity.
+
+
+### Logistic Regression:
+##### Processed by washing predicted by total cup points, mean altitude, and species
+```{R}
+set.seed(8847)
+log_cof <- coffee %>% select(species, total_cup_points, processing_method, altitude_mean_meters) %>% na.omit() %>% mutate(washed_code=if_else(processing_method=="Washed / Wet", 1, 0), washed_code=as.double(washed_code))
+
+log_fit <- glm(washed_code~total_cup_points+species+altitude_mean_meters, data=log_cof, family = "binomial")
+summary(log_fit)
+
+# Confusion Matrix
+log_cof$probs <- predict(log_fit, type = "response")
+table(prediction=as.numeric(log_cof$probs>.5), truth=log_cof$washed_code)%>%addmargins
+
+# Classifiation Diagnostics
+class_diag(log_cof$probs, log_cof$washed_code)
+
+# AUC and ROC Plot
+library(plotROC)
+ROCplot<-ggplot(log_cof)+geom_roc(aes(d=washed_code,m=probs), n.cuts=0) + ggtitle("ROC Plot")
+ROCplot
+calc_auc(ROCplot)
+
+# Density Plot of Log-odds
+log_cof$logit<-predict(log_fit,type="link")
+log_cof%>%ggplot()+geom_density(aes(logit,color=as.factor(washed_code),fill=as.factor(washed_code)), alpha=.4) +
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("Logit (log-odds)") +
+  geom_rug(aes(logit,color=as.factor(washed_code))) + coord_cartesian(xlim = c(-1.5,5)) + ylab("Density") + ggtitle("Density Plot of Logit Function") + labs(fill = "Washed Code", color = "Washed Code")
+```
+A logistic regression was fit to predict whether the processing method was washing or not using the total cup points, the species of the beans, and the average altitude meters. It was found that for every one increase in total cup points the odds of being washed was multiplied by a factor of 0.86 and for every increase in one meter of average alitutde the odds were multiplied by a factor of 1.001. It was also found that being a Robusta species multiplied the odds of being washed by a factor of 0.103. All of these effects were found to be significant.
+
+A confusion matrix is also reported, showing 750 correct classifications out of 1013. There is clearly a very low accuracy in predicting unwashed beans though, and this will be further explored with formal classification diagnostics.
+
+Classification diagnostics show an average accuracy (0.740), precision (0.747), F1 (0.846), and AUC (0.703). The sensitivity is remarkably high (0.974), showing that our model is quite good at predicting true values for washed beans. On the other hand, our model is quite terrible at predicting true negatives with a specificity of 0.103.
+
+Finally, we can see the generated ROC and exact AUC. The AUC of 0.703 is respectable but not great. The value is most likely highly inflated due to the much greater number of true positives compared to true negatives. This means that even if the model is terrible at prediciting true negatives, if it guesses positive a majority of the time it will still perform decently.
+
+
+### Logistic Regression (Overfit):
+##### Processed by washing overfit to predict based on all other variables
+```{R}
+set.seed(8847)
+library(glmnet)
+diags_df <- NULL
+
+log_cof <- coffee %>% na.omit()  %>% mutate_if(is.numeric, scale) %>% mutate(washed_code=if_else(processing_method=="Washed / Wet", 1, 0), washed_code=as.double(washed_code)) %>% select(-processing_method) %>% mutate(country_of_origin = case_when(
+  country_of_origin == "Cote d?Ivoire" ~ "Other",
+  country_of_origin == "Ecuador" ~ "Other",
+  country_of_origin == "Haiti" ~ "Other",
+  country_of_origin == "India" ~ "Other",
+  country_of_origin == "Japan" ~ "Other",
+  country_of_origin == "Laos" ~ "Other",
+  country_of_origin == "Myanmar" ~ "Other",
+  country_of_origin == "Panama" ~ "Other",
+  country_of_origin == "Papua New Guinea" ~ "Other",
+  country_of_origin == "Peru" ~ "Other",
+  country_of_origin == "Philippines" ~ "Other",
+  country_of_origin == "Rwanda" ~ "Other",
+  country_of_origin == "United States" ~ "Other",
+  country_of_origin == "United States (Puerto Rico)" ~ "Other",
+  country_of_origin == "Vietnam" ~ "Other",
+  country_of_origin != "Other" ~ country_of_origin)) %>% mutate_if(is.character, as.factor)
+
+log_fit <- glm(washed_code~(.), data=log_cof, family = "binomial")
+summary(log_fit)
+
+# Confusion Matrix
+log_cof$probs <- predict(log_fit, type = "response")
+table(prediction=as.numeric(log_cof$probs>.5), truth=log_cof$washed_code)%>%addmargins
+
+# Classifiation Diagnostics
+diags_df <- rbind(diags_df, class_diag(log_cof$probs, log_cof$washed_code))
+
+# 10-Fold CV
+k=10
+data <- log_cof %>% select(-probs) %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$washed_code #save truth labels from fold i
+  fit <- glm(washed_code~(.), data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+diags_df <- rbind(diags_df, summarize_all(diags,mean))
+
+# LASSO
+y<-as.matrix(log_cof$washed_code)
+log_cof_minus_wash <- log_cof %>% select(-washed_code, -probs)
+x <- model.matrix( ~ (.),log_cof_minus_wash)
+cv1<-cv.glmnet(x,y, family="binomial")
+lasso<-glmnet(x,y,lambda=cv1$lambda.1se)
+coef(lasso)
+
+log_cof <- log_cof %>% mutate(
+                   country_of_originChina=ifelse(log_cof$country_of_origin=="China",1,0),
+                   country_of_originColombia=ifelse(log_cof$country_of_origin=="Colombia",1,0),
+                   country_of_originCosta_Rica=ifelse(log_cof$country_of_origin=="Costa Rica",1,0),
+                   country_of_originEl_Salvador=ifelse(log_cof$country_of_origin=="El Salvador",1,0),
+                   country_of_originGuatemala=ifelse(log_cof$country_of_origin=="Guatemala",1,0),
+                   country_of_originHonduras =ifelse(log_cof$country_of_origin=="Honduras",1,0),
+                   country_of_originEthiopia=ifelse(log_cof$country_of_origin=="Ethiopia",1,0),
+                   country_of_originNicaragua=ifelse(log_cof$country_of_origin=="Nicaragua",1,0),
+                   country_of_originKenya=ifelse(log_cof$country_of_origin=="Kenya",1,0),
+                   country_of_originMalawi=ifelse(log_cof$country_of_origin=="Malawi",1,0),
+                   country_of_originMexico=ifelse(log_cof$country_of_origin=="Mexico",1,0),
+                   country_of_originOther=ifelse(log_cof$country_of_origin=="Other",1,0),
+                   country_of_originTaiwan=ifelse(log_cof$country_of_origin=="Taiwan",1,0),
+                   country_of_originTanzania=ifelse(log_cof$country_of_origin=="Tanzania, United Republic Of",1,0),
+                   country_of_originThailand=ifelse(log_cof$country_of_origin=="Thailand",1,0),
+                   country_of_originUganda=ifelse(log_cof$country_of_origin=="Uganda",1,0),
+                   colorGreen =ifelse(log_cof$color=="Green",1,0),
+                   colorNone=ifelse(log_cof$color=="None",1,0),
+                   speciesRobusta=ifelse(log_cof$species=="Robusta",1,0))
+
+k=10
+data <- log_cof %>% select(-probs) %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$washed_code #save truth labels from fold i
+  fit <- glm(washed_code~speciesRobusta+country_of_originChina+country_of_originColombia+country_of_originCosta_Rica+country_of_originEl_Salvador+country_of_originGuatemala+country_of_originHonduras+country_of_originEthiopia+country_of_originNicaragua+country_of_originKenya+country_of_originMalawi+country_of_originMexico+country_of_originOther+country_of_originTaiwan+country_of_originTanzania+country_of_originThailand+country_of_originUganda+colorGreen+colorNone+flavor+acidity+body+balance+sweetness+cupper_points+category_one_defects+altitude_mean_meters, data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+diags_df <- rbind(diags_df, summarize_all(diags,mean))
+
+diags_df %>% as.data.frame %>% mutate(rownames = c("Overfitted", "10-Fold CV", "LASSO")) %>% column_to_rownames("rownames")
+```
+This new model that accounts for all main effect variables performs significantly better for in-sample data compared to the previous model that only used three variables. All diagnostic values increased into the good to execellent range, apart from specificity which increased to a slightly less terrible 0.524.
+
+When 10-fold cross validation was performed to measure out-of-sample data, the model classification diagnostics decreased slightly but surprsingly not drastically. Specifically, the AUC only decreased by approximately 0.03-0.04 depending on random chance, which means that the original model using all variables was not overfitting to a drastic extent.
+
+When LASSO was performed, many of the rating variables were dropped (aroma, aftertaste, uniformity, clean cup, and category two defects). Along with this, the color category bluish-green was dropped. Interestingly, only one country was dropped, Indonesia, with all others being significant. All in all LASSO resulted in most of the countries, green and none color, flavor, acidity, body, balance, cupper points, sweetness, category one defects, and average altitude being used in the model. This resulted in a very similar performance to the original 10-fold cross validation with all variables, with differences between the two being nearly non-existant and mostly attributed to random chance in the selection. This shows that the original model was not overfitting to a major extent, as all models had very similar classification diagnostics and fairly high AUC's, performing quite well on both in and out of sample data.

@@ -1,0 +1,129 @@
+---
+title: "Project 1: Hockey Data Exploration"
+author: "Michael DiLeo, mjd3358"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+---
+
+```{r global_options, include=FALSE}
+#DO NOT EDIT THIS CHUNK OR ANYTHING ABOVE IT!
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F, tidy=T, tidy.opts=list(width.cutoff=50), R.options=list(max.print=100,dplyr.print_max=100))
+```
+### Introduction:
+##### These two data sets come from hockeyreference.com and rfordatascience's Tidy Tuesday. I found this data by exploring the rfordatascience's 2020 github repo. I choose this data as I enjoy watching hockey and I thought it would be interesting to explore how different top players stacked up against each other as well as exploring general scoring trends related to other metrics (such as penalty minutes or assists). The top_250 data set represents the top 250 goal scorers in the NHL and contains their total amount of career goals, years they played in, and other information such as a link to thir hockeyreference.com page. The season_goals data set represents each players season wide stats and contains much more information including their assists, points, penalty minutes, and different scoring categories during each season they played. Some associations I expect to find are that the more goals a player scores the more assists they also score, defensemen will have more assists than goals, there is no difference between average goals scored by C, LW, and RW players, and that there will be no difference in the amount of penalty minutes between the four positions.
+
+
+### Importing and Tidying Datasets:
+##### To begin, certain columns are removed from each data set, namely those with links to a player's page on hockeyreference.com or redundant data occuring in both sheets. yr_start is then mutated to be a character vector in top_players, and then the entire top_players sheet is put through a for loop to change any NA rankings (which occur is a player is tied in rank by goals) to the appropriate number. season_goals is filtered so that it contains only each players best season determined by goals scored and duplicate seasons are discounted (the first season in which they scored their max goals is kept).
+```{R}
+library(tidyverse)
+
+top_250 <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-03/top_250.csv')
+
+season_goals <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-03/season_goals.csv')
+
+top_players <- top_250 %>% select(-url_number, -raw_link, -link) %>% mutate(yr_start = as.character(yr_start))
+for(i in 1:6){top_players <- top_players %>% mutate(raw_rank = case_when(is.na(raw_rank) ~ lag(raw_rank), !is.na(raw_rank) ~ raw_rank))}
+glimpse(top_players)
+
+best_season <- season_goals %>% group_by(player) %>% filter(goals==max(goals)) %>% select(-rank, -years, -total_goals, -status, -yr_start, -league, -headshot) %>% distinct(player, .keep_all = TRUE)
+glimpse(best_season)
+```
+
+### Joining Data:
+##### The two data sets are combined to get all of the season wide stats for each top player for their best goal scoring season. The data sets are joined by player using a full join to ensure each player has their appropriate stats assciated with them.
+```{R}
+hockey <- top_players %>% full_join(best_season, by="player")
+glimpse(hockey)
+```
+
+### Summarizing Data:
+##### First the data is mutated to add a new column with each players average goals per game in the given season. Next three basic tables are produced showing the amount of players in the top 250 from each team (only the top 6 teams are shown), and then in each postition (Center, Left Wing, Right Wing, and Defense) with either a left or right shooting hand. Finally a table showing the mean, standard deviation, min, median, and max for goals, assists, points, goals per game, and player age is produced.
+```{R}
+# Mutate to add average goals per game in the season
+hockey <- hockey %>% mutate(goals_per_game = goals/season_games)
+
+# How many top players per team and then position and hand
+# This finally gives me evidence that the Boston Bruins are in fact the best team in the league
+hockey %>% filter(!is.na(team)) %>% group_by(team) %>% count %>% arrange(-n) %>% head(6)
+hockey %>% filter(!is.na(position)) %>% group_by(position, hand) %>% count %>% pivot_wider(names_from = hand, values_from = n)
+
+# Summary stats for top season performance
+hockey %>% select(goals, assists, points, goals_per_game, age) %>% rename("goals-per-game" = "goals_per_game") %>% summarize_all(c(mean=mean, sd=sd, min=min, median=median, max=max)) %>% pivot_longer(1:25) %>% separate(name, into = c("variable", "stat"), sep = "_") %>% pivot_wider(names_from = stat, values_from = value)
+
+# Coorelation matrix of all numeric categories
+hockey_cor <- hockey %>% select(is.numeric, -raw_rank) %>% scale %>% na.omit %>% cor
+```
+The first table shows some interesting information, namely the fact that of the top six teams by number of top 250 players, five are from the "original six" of the NHL. These were the first six teams to play in the NHL, and as such it makes sense that they would have more players in the top 250, they have simply had more time to accumulate them. Pitsburg is the only team outside of the "original six" in this top six ranking, and the New York Rangers are the only "original six" team missing. The second table shows an interesting correlation between wing position and shooting hand. It appears that the majority of left wingers shoot left handed and visa versa for right wingers. We can also see that left handed shooting is most common in all positions besides right wingers, even defensemen. This association could be explained by the fact that many right handed players will actually shoot left handed. Finally, the second table shows interestingly enough that goals and assists seem to be approximately even per player, and that most players score only once every two games. It is also interesting to see that most players were about 25 when they had their best scoring season, but the oldest was 38 (Ralph Backstrom), a full three and a half standard deviation away from the mean.
+
+### Average Goals per Season Plot:
+```{R}
+hockey %>% group_by(position) %>% na.omit %>% ggplot(aes(position, goals)) + geom_bar(stat="summary", fun = mean, aes(fill = position)) + geom_errorbar(stat = "summary",  fun.data=mean_cl_normal, width = 0.7) + ggtitle("Average Goals per Season per Position") + ylab("Mean Goals per Season") + xlab("Position")
+```
+This plot shows the average goals per season per position in the top 250 players. As to be expected defensemen score significantly less on average due to the nature of their position. Across the other three positions there appears to be no significant differences in average scoring per season. Right wingers have a slight edge, but this is most likely due to random error and is accounted for in the 95% confidence interval bars.
+
+### Penalty Minutes Plot:
+```{R}
+hockey %>% arrange(-penalty_min) %>% filter(!is.na(position)) %>% mutate(penalty_min_rank = row_number()) %>% ggplot(aes(penalty_min_rank, penalty_min)) + geom_bar(stat="identity", aes(fill=position)) + theme(axis.text.x=element_blank(), axis.ticks.x=element_blank()) + ggtitle("Penalty Minutes per Player and Position") + ylab("Penalty Minutes") + xlab("Player")
+hockey %>% filter(!is.na(position)) %>% filter(penalty_min==max(penalty_min) | penalty_min==min(penalty_min)) %>% select(raw_rank, player, position, team, penalty_min)
+```
+This plot shows each player and their amount of minutes in the penalty box across their entire best season. There does not appear to be a strong coorelation between position and more or less time in the box, but it is interesting to see that all of the top players by penalty minutes were left wingers. The player with the most penalty minutes was Brian Sutter of the St. Louis Blues and the player with the least was Butch Goring of the LA Kings.
+
+### Goals vs Assists Plot:
+```{R}
+hockey %>% select(goals, assists, position) %>% na.omit %>% ggplot(aes(goals, assists)) + geom_point(aes(color=position)) + geom_smooth(method="lm", se=F) + ggtitle("Goals vs. Assists per Player") + xlab("Goals") + ylab("Assists") + scale_y_continuous(breaks=seq(0,130,10)) + scale_x_continuous(breaks=seq(0,100,10)) + geom_abline()
+
+cor(hockey$goals, hockey$assists)
+```
+This plot shows each players goals scored in their best season plotted against their assists earned. Different positions are color coded and a blue line of best fit is added. We can see a realatively positive coorelation between the two values, and this makes sense based on the summary statistic previously computed showing close means and standard deviations in the two variables. We do see an interesting trend in that all defensemen score more assists than goals, and this can be seen by all of the green dots falling above the black y=x line.
+
+### Coorelation Matrix Plot:
+```{R}
+hockey_cor %>% as.data.frame %>%
+rownames_to_column %>% pivot_longer(-1) %>%
+ggplot(aes(rowname,name,fill=value))+geom_tile()+
+xlab("")+ylab("")+coord_fixed()+theme(axis.text.x = element_text(angle=60, hjust=1))+
+scale_fill_gradient2(low="red",mid="white",high="blue") + ggtitle("Coorelation Matrix")
+```
+This plot shows a coorelation matrix of all numeric variables (minus ranking). We can see that most variables are positively associated with the others, with key exceptions being age and penalty minutes. It goes to reason that the more sucessful a player is the better they will score on most metrics, but that as a player ages they will be less athletic and score lower. In a similar vein it goes to reason that players that have higher penalty minutes will have less opportunities to score and contribute assists.
+
+### Principal Component Analysis:
+```{R}
+hockey_nums <- hockey %>% select_if(is.numeric) %>% select(-raw_rank) %>% scale
+rownames(hockey_nums) <- hockey$player
+hockey_nums <- hockey_nums %>% na.omit
+hockey_pca <- princomp(hockey_nums)
+
+summary(hockey_pca, loadings = T)
+hockey_pca_scores <- hockey_pca$scores %>% as.data.frame %>% rownames_to_column("Name")
+
+hockey_pca_scores %>% top_n(1, Comp.1) %>% select(Name:Comp.4)
+hockey_pca_scores %>% top_n(1, Comp.2) %>% select(Name:Comp.4)
+hockey_pca_scores %>% top_n(1, Comp.3) %>% select(Name:Comp.4)
+hockey_pca_scores %>% top_n(1, Comp.4) %>% select(Name:Comp.4)
+
+hockey <- hockey %>% left_join(hockey_pca_scores, by=c("player"="Name"))
+
+hockey %>% ggplot(aes(Comp.1, Comp.2)) + geom_point() + geom_point(x=11.29018, y=-1.569494, color="red") + geom_point(x=1.826958, y= 2.414637, color="blue") + ggtitle("Component 1 vs Component 2") + xlab("Component 1") + ylab("Component 2")
+
+hockey %>% ggplot(aes(x=raw_rank, y=Comp.1)) + geom_point() + geom_point(x=1, y=11.29018, color="red") + geom_smooth(method="lm", se=F) + ggtitle("Player Rank vs Component 1") + xlab("Player Rank") + ylab("Component 1")
+
+hockey %>% ggplot(aes(x=penalty_min, y=Comp.2)) + geom_point() + geom_point(x=211, y=2.414637, color="blue") + geom_smooth(method="lm", se=F, color="red") + ggtitle("Penalty Minutes vs Component 2") + xlab("Penalty Minutes") + ylab("Component 2")
+```
+For this principal component analysis all numeric factors (excluding raw_rank as this is is basically another way to display total_goals) were included and run through princomp. All components were chosen that had eigenvalues above 1, below is a list of my interpretation of the four included values: 
+
+
+Comp1: General player ability metric: Players that score high on this tend to be good at just about anything. As we would expect Wayne Gretzky ("The Great One") is the highest on this component and is generaly considered to be one of if not the best player of all time.
+
+Comp2: Aggressiveness in play metric: These players have high penalty minutes and power play goals with low plus minus and age. They are get in your face types of players that play a physical game, and as such it makes sense that Brendan Shanahan is the top player in this component, he is the only player to have ever scored over 600 goals with over 2000 penalty minutes.
+
+Comp3: Puck hogging and scoring factor: These players focus on goals and game winners and have negative scores on assists and short handed goals. They want to score score score and thats about it, but you don't want to have them on the ice when you are down a man, you don't want a puck hog in when you're playing defense. The player that scores highest on this component is Brett Hull, a renowned scorer and "sniper" in the league.
+
+Comp4: Game smarts and good team player factor: These players have high assists, less penalty minutes, tend to be older, and score less per game. They are focused on getting the puck to their teammates and acting as a play maker, not necessarily scoring themseleves. The player highest on this factor was Adam Oates, the second most productive NHL player in history, generating over 1000 assists before his retirement.
+
+
+Finally we have some graphs showing the first two components and their relationships with different metrics. The first plot shows component one versus component two with Wayne Gretzy highlighted in red and Brendan Shanahan in blue. These two players are the uppper extremes of their respective componenets. Next we have a plot showing the association between raw rank and component one. This shows that as rank decreases so does component one, and again Gretzky is highlighted in red to show how extreme of an outlier he is on this measure. Lastly we have a plot of component two and penalty minutes, and again we see a general upward trend, with Brendan Shanahan being near the top of the graph.
