@@ -17,21 +17,21 @@
     </item>
     
     <item>
-      <title>Project 1: Hockey Data Exploration</title>
-      <link>/project/project1/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/project/project1/</guid>
-      <description>Introduction: These two data sets come from hockeyreference.com and rfordatascience&#39;s Tidy Tuesday. I found this data by exploring the rfordatascience&#39;s 2020 github repo. I choose this data as I enjoy watching hockey and I thought it would be interesting to explore how different top players stacked up against each other as well as exploring general scoring trends related to other metrics (such as penalty minutes or assists). The top_250 data set represents the top 250 goal scorers in the NHL and contains their total amount of career goals, years they played in, and other information such as a link to thir hockeyreference.</description>
-    </item>
-    
-    <item>
       <title>Project 2: Coffee Data Regressions</title>
       <link>/project/project2/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 25 Nov 2020 00:00:00 +0000</pubDate>
       
       <guid>/project/project2/</guid>
       <description>class_diag &amp;lt;- function(probs, truth) { tab &amp;lt;- table(factor(probs &amp;gt; 0.5, levels = c(&amp;quot;FALSE&amp;quot;, &amp;quot;TRUE&amp;quot;)), truth) acc = sum(diag(tab))/sum(tab) sens = tab[2, 2]/colSums(tab)[2] spec = tab[1, 1]/colSums(tab)[1] ppv = tab[2, 2]/rowSums(tab)[2] f1 = 2 * (sens * ppv)/(sens + ppv) if (is.numeric(truth) == FALSE &amp;amp; is.logical(truth) == FALSE) { truth &amp;lt;- as.numeric(truth) - 1 } # CALCULATE EXACT AUC ord &amp;lt;- order(probs, decreasing = TRUE) probs &amp;lt;- probs[ord] truth &amp;lt;- truth[ord] TPR = cumsum(truth)/max(1, sum(truth)) FPR = cumsum(!</description>
+    </item>
+    
+    <item>
+      <title>Project 1: Hockey Data Exploration</title>
+      <link>/project/project1/</link>
+      <pubDate>Sun, 18 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Introduction: These two data sets come from hockeyreference.com and rfordatascience&#39;s Tidy Tuesday. I found this data by exploring the rfordatascience&#39;s 2020 github repo. I choose this data as I enjoy watching hockey and I thought it would be interesting to explore how different top players stacked up against each other as well as exploring general scoring trends related to other metrics (such as penalty minutes or assists). The top_250 data set represents the top 250 goal scorers in the NHL and contains their total amount of career goals, years they played in, and other information such as a link to thir hockeyreference.</description>
     </item>
     
     <item>

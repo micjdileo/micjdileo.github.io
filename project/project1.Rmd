@@ -1,7 +1,7 @@
 ---
 title: "Project 1: Hockey Data Exploration"
 author: "Michael DiLeo, mjd3358"
-date: "`r format(Sys.Date(), '%B %d, %Y')`"
+date: 2020-10-18
 output:
   html_document:
     toc: true
